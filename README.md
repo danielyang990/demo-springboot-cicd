@@ -98,5 +98,5 @@ app:
 * [docker-compose 中文文档](https://yeasy.gitbooks.io/docker_practice/compose/)
 * [kubernetes 中文文档](https://k8smeetup.github.io/docs/home/)
 * [helm 中文文档](https://whmzsu.github.io/helm-doc-zh-cn/)
-
+* [Configuring CI/CD on Kubernetes with Jenkins](https://medium.com/containerum/configuring-ci-cd-on-kubernetes-with-jenkins-89eab7234270)
 
