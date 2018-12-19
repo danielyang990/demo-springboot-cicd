@@ -1,0 +1,86 @@
+
+pipeline {
+    // 运行node条件
+    // 为了扩容jenkins的功能一般情况会分开一些功能到不同的node上面
+    // 这样每个node作用比较清晰，并可以并行处理更多的任务量    
+    agent {
+        label 'java'
+    }    
+
+    // (optional) 流水线全局设置
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+
+        // 不允许并行执行
+        disableConcurrentBuilds()
+    }
+    
+    parameters {
+        booleanParam(name: 'RUN_SONOBUOY', defaultValue: true, description: 'Run tests in sonobuoy')
+    }
+    
+    //(optional) 环境变量
+    environment {
+      FOLDER = '$GOPATH/src/alauda.io/devops-apiserver'
+      REPOSITORY = "test-springboot"
+      OWNER = "devops"
+      
+      NAMESPACE = "default"
+      DEPLOYMENT = "test-springboot"
+      CONTAINER = "web"
+    }    
+    
+  stages {
+      stage('Checkout') {
+        steps {
+          script {
+              // checkout code
+              def scmVars = checkout scm
+              // extract git information
+              env.GIT_COMMIT = scmVars.GIT_COMMIT
+              env.GIT_BRANCH = scmVars.GIT_BRANCH
+              GIT_COMMIT = "${scmVars.GIT_COMMIT}"
+              GIT_BRANCH = "${scmVars.GIT_BRANCH}"
+              RELEASE_VERSION = readFile('.version').trim()
+              CHART_VERSION = readFile('.chartversion').trim()
+              RELEASE_BUILD = "${RELEASE_VERSION}.${env.BUILD_NUMBER}"
+              if (GIT_BRANCH != "master") {
+                  def branch = GIT_BRANCH.replace("/","-").replace("_","-")
+                  RELEASE_BUILD = "${RELEASE_VERSION}.${branch}.${env.BUILD_NUMBER}".toLowerCase()
+              }
+          }
+          // moving project code for the specified folder
+          sh """
+              rm -rf ${FOLDER}
+              mkdir -p ${FOLDER}
+              cp -R . ${FOLDER}
+              cp -R .git ${FOLDER}/.git
+          """
+          // installing golang coverage and report tools
+        //   sh """
+        //     go get -u gopkg.in/alecthomas/gometalinter.v2
+        //       gometalinter.v2 --install
+        //       go get -u github.com/axw/gocov/...
+        //       go get -u github.com/AlekSi/gocov-xml
+        //       go get -u github.com/jstemmer/go-junit-report
+        //   """
+          sh """
+              go get -u github.com/alauda/gitversion
+          """
+          script {
+              if (GIT_BRANCH == "master") {
+                  sh "gitversion patch ${RELEASE_VERSION} > patch"
+                  RELEASE_BUILD = readFile("patch").trim()
+              }
+              echo "release ${RELEASE_VERSION} - release build ${RELEASE_BUILD}"
+          }
+        }
+      }      
+    stage('Run maven') {
+      steps {
+        sh 'mvn -version'
+        sh "echo Workspace dir is ${pwd()}"
+      }
+    }
+  }
+}

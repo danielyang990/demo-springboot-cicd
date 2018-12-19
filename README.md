@@ -1,12 +1,14 @@
 # demo-springboot-cicd
 
-这个示例用于演示一个 `sprintboot` 项目的 `cicd` 过程, 会完整的描述一个项目从开发到测试，以及最终部署到生成环境的一个完整流程。 流程图如下:
+这个示例用于演示一个 `sprintboot` 项目的 `cicd` 过程, 会完整的描述一个项目从开发到测试，以及最终部署到生成环境的一个完整流程。 
+
+我们将使用 `jenkins` 在此基础上构建一条完整的持续交付流水线，并且让团队不同成员能够基于该流水线展开基本的协作。
+
+* 开发： 持续提交代码并能够通过持续集成（CI）过程快速获取反馈，在通过CI验证后，能够自动化部署到开发环境，以便后续的进一步功能测试（手动/自动自动化测试）等；
+* 测试： 在需要对项目功能进行验证时，可以一键部署测试环境，并且在此环境基础上可以完成功能验收(手动)，以及全量的自动化验收测试等；
+* 运维：一键部署生产环境，同时发布创建版本，以便在发布异常时能够快速回归。
 
 ![](images/ci-cd-jenkins-helm-k8s.png)
-
-一些特殊的情况，例如团队规模比较小，开发和测试是相同的人，可以暂时把流程图中的 `dev` 部分去掉，当以后团队规模扩大后，再补充上不迟。
-
-下面的流程，不包含部署到 `dev` 环境的说明。
 
 涉及到相关过程如下:
 
@@ -61,15 +63,19 @@ app:
 
 ### 环境配置
 
-为了隔离线下和线上环境，需要部署两套环境，一套是测试环境(`staging`)，一套是生产环境(`prod`)，只有在 `staging` 环境测试通过的应用，才被允许部署到 `prod` 环境。
+为了隔离线下和线上环境，需要有三套环境：
 
-两套环境都需要安装的软件为:
+* 开发环境(`dev`)
+* 测试环境(`staging`)
+* 生产环境(`prod`)
+
+几套环境都需要安装的软件为:
 
 * [kubenetes](https://www.kubernetes.org.cn/4619.html): 子目录中为 `k8s` 中的一些第三方的组件，不带链接的，表示在这篇安装文档中有安装说明
     * Ingress Controlle: 负载均衡
     * Helm: 应用管理
     * [cert-manager](https://cloud.tencent.com/developer/article/1326543): 免费证书的签发
-* [jenkins](https://github.com/gjmzj/kubeasz/blob/master/docs/guide/jenkins.md): 流水线管理，部署在上面部署好的 `k8s` 集群中
+* [jenkins](https://github.com/gjmzj/kubeasz/blob/master/docs/guide/jenkins.md): 流水线管理，部署在上面的 `k8s` 集群中
 * [harbor](): 私有镜像仓库管理
 * [sonarqube](): 代码检查
 
